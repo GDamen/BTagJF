@@ -15,6 +15,14 @@
 
 using namespace std;
 
+void checkVertexes(vector<float> jet) {
+
+
+
+}
+
+
+
 void vtxSeparation() {
 
 	TCanvas *canvas = new TCanvas("JFEffCanvas","Graph2D example",0,0,800,800);
@@ -28,6 +36,8 @@ void vtxSeparation() {
   Float_t minTrkPt = 0.9;
   Float_t maxEta = 2.5;
   Float_t bEff = 0.70;
+  
+  float jet_pt_jet_i, jet_eta_jet_i, jet_JVT_jet_i;
   
   /////////////////////////////
   // HISTOs
@@ -44,6 +54,7 @@ void vtxSeparation() {
   TTreeReaderValue<vector<float> > jetEta(myStdReader, "jet_eta");
   TTreeReaderValue<vector<float> > jetPhi(myStdReader, "jet_phi");
   TTreeReaderValue<vector<int> >   jetFlav(myStdReader, "jet_truthflav");
+  TTreeReaderValue<vector<float> > jetJVT(myStdReader, "jet_JVT");
 
   TTreeReaderValue<vector<float> > bHadX(myStdReader, "bH_x");
 	TTreeReaderValue<vector<float> > bHadY(myStdReader, "bH_y");
@@ -55,12 +66,11 @@ void vtxSeparation() {
 	TTreeReaderValue<vector<vector<float> > > recoVtxX(myStdReader, "jet_jf_vtx_x");
 	TTreeReaderValue<vector<vector<float> > > recoVtxY(myStdReader, "jet_jf_vtx_y");
 	TTreeReaderValue<vector<vector<float> > > recoVtxZ(myStdReader, "jet_jf_vtx_z");
-
-  //JF values
-  TTreeReaderValue<vector<float> > jetJFProbQ(myStdReader, "jet_jf_pu");
-  TTreeReaderValue<vector<float> > jetJFProbB(myStdReader, "jet_jf_pb");
-  TTreeReaderValue<vector<float> > jetJFProbC(myStdReader, "jet_jf_pc");
-  TTreeReaderValue<vector<float> > jetJFProb(myStdReader, "jet_jf_llr");
+	TTreeReaderValue<vector<vector<float> > > recoVtxL3D(myStdReader, "jet_jf_vtx_L3D");
+	
+	TTreeReaderValue<double> tPVX(myStdReader, "truth_PVx");
+	TTreeReaderValue<double> tPVY(myStdReader, "truth_PVx");
+	TTreeReaderValue<double> tPVZ(myStdReader, "truth_PVx");
 
   ///////////////////////////////
   // FILL HISTOs
@@ -69,20 +79,24 @@ void vtxSeparation() {
 
     //loop over jets
     for(int ij = 0; ij < jetPt->size(); ij++){
+    
+			if(jetFlav->at(ij) == 5) {
 			
-			for(int iv = 0; iv < recoVtxX->at(ij).size(); iv++) {
+				for(int iv = 0; iv < recoVtxX->at(ij).size(); iv++) {
 				
 				float dReco = std::sqrt(recoVtxX->at(ij).at(iv)*recoVtxX->at(ij).at(iv) + recoVtxY->at(ij).at(iv)*recoVtxY->at(ij).at(iv) + recoVtxZ->at(ij).at(iv)*recoVtxZ->at(ij).at(iv));
 				float dBt = std::sqrt(bHadX->at(ij)*bHadX->at(ij) + bHadY->at(ij)*bHadY->at(ij) + bHadZ->at(ij)*bHadZ->at(ij)); 
 				float dCt = std::sqrt(cHadX->at(ij)*cHadX->at(ij) + cHadY->at(ij)*cHadY->at(ij) + cHadZ->at(ij)*cHadZ->at(ij)); 
 
 				float ratio = (dReco - dBt) / (dCt - dBt) ;
-				
 				ratioDist -> Fill(ratio);
 
 				}
+			}
 		}
   }
+  
 ratioDist -> Draw();
+
 }
 
