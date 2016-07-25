@@ -15,14 +15,6 @@
 
 using namespace std;
 
-void checkVertexes(vector<float> jet) {
-
-
-
-}
-
-
-
 void vtxSeparation() {
 
 	TCanvas *canvas = new TCanvas("JFEffCanvas","Graph2D example",0,0,800,800);
@@ -37,6 +29,8 @@ void vtxSeparation() {
   Float_t maxEta = 2.5;
   Float_t bEff = 0.70;
   
+  int totalEvs = 0;
+  int usedEvs = 0;
   float jet_pt_jet_i, jet_eta_jet_i, jet_JVT_jet_i;
   
   /////////////////////////////
@@ -47,7 +41,7 @@ void vtxSeparation() {
   ////////////////////////////
   // TREE READER
   
-  TFile *myStdFile = TFile::Open("ntuples/flav_Akt4EMTo_newVars.root");
+  TFile *myStdFile = TFile::Open("../ntuples/flav_Akt4EMTo_newVars.root");
   TTreeReader myStdReader("bTag_AntiKt4EMTopoJets", myStdFile);
   
   TTreeReaderValue<vector<float> > jetPt(myStdReader, "jet_pt");
@@ -80,7 +74,12 @@ void vtxSeparation() {
     //loop over jets
     for(int ij = 0; ij < jetPt->size(); ij++){
     
-			if(jetFlav->at(ij) == 5) {
+    jet_pt_jet_i = jetPt->at(ij);
+    jet_eta_jet_i = fabs(jetEta->at(ij));
+		jet_JVT_jet_i = jetJVT->at(ij);
+    
+			if(jetFlav->at(ij) == 5 && 
+					(jet_JVT_jet_i > 0.59 || jet_pt_jet_i >60000.0 || fabs(jet_eta_jet_i)>2.4)) {
 				
 				bool vertexCheck = false;
 				int numOfGoodVtx = 0;
@@ -113,10 +112,15 @@ void vtxSeparation() {
 
 					float ratio = (dReco - dBt) / (dCt - dBt) ;
 					ratioDist -> Fill(ratio);
+					usedEvs++;
 				}
 			}
+			totalEvs++; 
 		}
   }
+  
+float P = (float)usedEvs / (float)totalEvs;
+cout << usedEvs << endl << totalEvs << endl << P << endl;
   
 ratioDist -> Draw();
 
