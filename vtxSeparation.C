@@ -81,16 +81,38 @@ void vtxSeparation() {
     for(int ij = 0; ij < jetPt->size(); ij++){
     
 			if(jetFlav->at(ij) == 5) {
-			
-				for(int iv = 0; iv < recoVtxX->at(ij).size(); iv++) {
 				
-				float dReco = std::sqrt(recoVtxX->at(ij).at(iv)*recoVtxX->at(ij).at(iv) + recoVtxY->at(ij).at(iv)*recoVtxY->at(ij).at(iv) + recoVtxZ->at(ij).at(iv)*recoVtxZ->at(ij).at(iv));
-				float dBt = std::sqrt(bHadX->at(ij)*bHadX->at(ij) + bHadY->at(ij)*bHadY->at(ij) + bHadZ->at(ij)*bHadZ->at(ij)); 
-				float dCt = std::sqrt(cHadX->at(ij)*cHadX->at(ij) + cHadY->at(ij)*cHadY->at(ij) + cHadZ->at(ij)*cHadZ->at(ij)); 
+				bool vertexCheck = false;
+				int numOfGoodVtx = 0;
+				int goodVtx = 0;
+			
+				if(recoVtxL3D->at(ij).size() == 1 && recoVtxL3D->at(ij).at(0) >= 0) {
+				
+					vertexCheck = true;
+					goodVtx = 0;
+					
+				} else {
+				
+					for(int iv = 0; iv < recoVtxL3D->at(ij).size(); iv++) {
+						
+						if(recoVtxL3D->at(ij).at(iv) >= 0) {
+							numOfGoodVtx ++;
+							goodVtx = iv;
+						}
+					}
+					if(numOfGoodVtx == 1) {
+						vertexCheck = true;
+					}
+				}
+			
+				if (vertexCheck) {
 
-				float ratio = (dReco - dBt) / (dCt - dBt) ;
-				ratioDist -> Fill(ratio);
+					float dReco = std::sqrt(recoVtxX->at(ij).at(goodVtx)*recoVtxX->at(ij).at(goodVtx) + recoVtxY->at(ij).at(goodVtx)*recoVtxY->at(ij).at(goodVtx) + recoVtxZ->at(ij).at(goodVtx)*recoVtxZ->at(ij).at(goodVtx));
+					float dBt = std::sqrt(bHadX->at(ij)*bHadX->at(ij) + bHadY->at(ij)*bHadY->at(ij) + bHadZ->at(ij)*bHadZ->at(ij)); 
+					float dCt = std::sqrt(cHadX->at(ij)*cHadX->at(ij) + cHadY->at(ij)*cHadY->at(ij) + cHadZ->at(ij)*cHadZ->at(ij)); 
 
+					float ratio = (dReco - dBt) / (dCt - dBt) ;
+					ratioDist -> Fill(ratio);
 				}
 			}
 		}
