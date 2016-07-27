@@ -49,6 +49,7 @@ void vtxSeparation() {
   TTreeReaderValue<vector<float> > jetPhi(myStdReader, "jet_phi");
   TTreeReaderValue<vector<int> >   jetFlav(myStdReader, "jet_truthflav");
   TTreeReaderValue<vector<float> > jetJVT(myStdReader, "jet_JVT");
+  TTreeReaderValue<vector<int> > jetAliveAfterOR(myStdReader, "jet_aliveAfterOR");
 
   TTreeReaderValue<vector<float> > bHadX(myStdReader, "bH_x");
 	TTreeReaderValue<vector<float> > bHadY(myStdReader, "bH_y");
@@ -70,6 +71,11 @@ void vtxSeparation() {
   // FILL HISTOs
   // Loop over TTree entries
   while (myStdReader.Next()) {
+  
+  	TVector3 primVct(*tPVX, *tPVY, *tPVZ);
+  	float pX = (float)primVct.x();
+  	float pY = (float)primVct.y();
+  	float pZ = (float)primVct.z();
 
     //loop over jets
     for(int ij = 0; ij < jetPt->size(); ij++){
@@ -79,7 +85,10 @@ void vtxSeparation() {
 		jet_JVT_jet_i = jetJVT->at(ij);
     
 			if(jetFlav->at(ij) == 5 && 
-					(jet_JVT_jet_i > 0.59 || jet_pt_jet_i >60000.0 || fabs(jet_eta_jet_i)>2.4)) {
+					(jet_JVT_jet_i > 0.59 || jet_pt_jet_i > 60000.0 || fabs(jet_eta_jet_i)>2.4) &&
+					jetPt->at(ij) > 20000 &&
+					jetEta->at(ij) < 2.5 &&
+					jetAliveAfterOR->at(ij) == 1) {
 				
 				bool vertexCheck = false;
 				int numOfGoodVtx = 0;
@@ -105,12 +114,15 @@ void vtxSeparation() {
 				}
 			
 				if (vertexCheck) {
-
-					float dReco = std::sqrt(recoVtxX->at(ij).at(goodVtx)*recoVtxX->at(ij).at(goodVtx) + recoVtxY->at(ij).at(goodVtx)*recoVtxY->at(ij).at(goodVtx) + recoVtxZ->at(ij).at(goodVtx)*recoVtxZ->at(ij).at(goodVtx));
-					float dBt = std::sqrt(bHadX->at(ij)*bHadX->at(ij) + bHadY->at(ij)*bHadY->at(ij) + bHadZ->at(ij)*bHadZ->at(ij)); 
-					float dCt = std::sqrt(cHadX->at(ij)*cHadX->at(ij) + cHadY->at(ij)*cHadY->at(ij) + cHadZ->at(ij)*cHadZ->at(ij)); 
-
-					float ratio = (dReco - dBt) / (dCt - dBt) ;
+				
+					TVector3 recoVct(recoVtxX->at(ij).at(goodVtx) - pX, recoVtxY->at(ij).at(goodVtx) - pY, recoVtxZ->at(ij).at(goodVtx) - pZ);
+					TVector3 bHVct(bHadX->at(ij) - pX, bHadY->at(ij) - pY, bHadZ->at(ij) - pZ);
+					TVector3 cHVct(cHadX->at(ij) - pX, cHadY->at(ij) - pY, cHadZ->at(ij) - pZ);
+					
+					TVector3 projRecoVct = (recoVct.Dot(bHVct.Unit()))*bHVct.Unit();
+					
+					double ratio = (projRecoVct.Mag() - bHVct.Mag()) / (cHVct.Mag() - bHVct.Mag());
+					
 					ratioDist -> Fill(ratio);
 					usedEvs++;
 				}
